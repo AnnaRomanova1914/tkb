@@ -1,0 +1,205 @@
+<!-- Тестовое задание -->
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Тестовое задание</title>
+    <!--Подключаем библиотеку-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+        
+        div.content {
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            -khtml-border-radius: 3px;
+            background: #fcf9f9 !important;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            color: lightblue;
+            font-size: 20px;
+        }
+        
+        table {
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        
+        thead {
+            color: darkblue;
+            font-size: 11px;
+        }
+        
+        input {
+            border: 1px solid #cccccc;
+            border-radius: 3px;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            -khtml-border-radius: 3px;
+            background: #ffffff !important;
+            outline: none;
+            height: 24px;
+            width: 200px;
+            color: #cccccc;
+            font-size: 11px;
+            font-family: Tahoma;
+            margin-bottom: 5px;
+        }
+        
+        input:focus {
+            color: #000000;
+            border: 1px solid #000000
+        }
+        
+        .delete-row-btn,
+        .add-row-btn,
+        .save {
+            font-size: 11px;
+            margin-top: -5px;
+            color: darkblue !important;
+            text-transform: uppercase;
+            background: #ffffff;
+            padding: 5px;
+            border: 1px solid darkblue !important;
+            border-radius: 6px;
+            display: inline-block;
+            transition: all 0.3s ease 0s;
+            outline: none;
+        }
+        
+        .delete-row-btn:hover,
+        .add-row-btn:hover,
+        .save:hover {
+            background: lightblue;
+            transition: all 0.4s ease 0s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <label>Особые условия</label>
+        <div>
+            <table>
+                <thead>
+                    <th>Условие</th>
+                    <th />
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <input type="text" class="form-control" value="">
+                        </td>
+                        <td>
+                            <div class="delete-row-btn">&#8211;</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="add-row-btn">
+                Добавить
+            </button>
+        </div>
+    </div>
+    <div>
+        <button class="save">
+            Сохранить
+        </button>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+
+            // получить данные на сервере из таблицы по id
+            let urlParams = new URLSearchParams(window.location.search);
+            let id = urlParams.get('id');
+            if ($.isNumeric(id)) {
+                $.get('index.php', {
+                        'id': id
+                    })
+                    .done(function(data) {
+                        data = jQuery.parseJSON(data);
+                        if (data.html)
+                            $('.content').html(data.html);
+                        if (data.error)
+                            alert(data.error);
+                        if (data.message)
+                            alert(data.message);
+                    })
+                    .fail(function() {
+                        alert("Ошибка выполнения");
+                    });
+            }
+
+            // сохранить данные на сервере в таблицу
+            $(document).on('click', '.save', function() {
+
+                let content = $('.content');
+
+                // установить аттрибут value для input
+                content.find(".form-control").each(function() {
+                    $(this).attr('value', $(this).val());
+                });
+
+                $.post('index.php', {
+                        'html': content.html()
+                    })
+                    .done(function(data) {
+                        data = jQuery.parseJSON(data);
+                        if (data.id)
+                            alert('Добавлена запись с id = ' + data.id);
+                        if (data.error)
+                            alert(data.error);
+                    })
+                    .fail(function() {
+                        alert("Ошибка выполнения");
+                    });
+            });
+
+            // кнопка добавить строку для таблицы
+            $(document).on('click', '.add-row-btn', function() {
+
+                let arows = $(this).siblings('table').find('tbody>tr'); // массив строк
+                let lastTableRow = arows[arows.length - 1];
+
+                if (arows.length > 0) {
+                    // Скопировать его и очистить value у input
+                    var newTableRow = $(lastTableRow).clone();
+                    $(this).siblings('table').find('tbody').append(newTableRow);
+                    $(newTableRow).find('input').val('').attr('value', '');
+                }
+            });
+
+            // кнопка удалить строку для таблицы
+            $(document).on('click', '.delete-row-btn', function() {
+
+                let delRow = $(this).closest('tr');
+                let lengthRows = delRow.closest('tbody').find('tr').length;
+
+                if (lengthRows > 1) $(delRow).remove();
+                else $(delRow).find('input').val('');
+
+            });
+        });
+    </script>
+</body>
+
+</html>
